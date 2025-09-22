@@ -15,7 +15,7 @@ outpath = os.path.join(
 customers = {}
 
 
-def check_cells_in_row(row):
+def check_cells_in_row(row): #simple validation for the 4 columns we expect
     if len(row) != 4:
         return False
     customer_id, name, email, purchase_amount = row
@@ -30,9 +30,9 @@ def check_cells_in_row(row):
     return True
 
 def safe_line_parse(line, target_len=4, skip = False):
+    #splits the line up and ensures it has the right number of columns
+    #if skip is True, it will not validate the contents of the cells, useful for header row
   try:
-    # CHANGED: Parse as CSV by splitting on commas (was whitespace split)
-    # CHANGED: Do not drop empty columns; preserve all columns
     row_buffer = []
     clean_line = line.strip()
     cols = clean_line.split(",")
