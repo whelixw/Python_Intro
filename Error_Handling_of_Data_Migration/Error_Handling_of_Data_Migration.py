@@ -1,12 +1,17 @@
 import os
 from pathlib import Path
 
-def clean_path(s: str) -> Path:
+#TODO: message when overwriting existing file, file perms
+#impute missing id from line number change sign for negative purchase amounts, handle duplicates
+#validate email better.
+
+
+def clean_path(s: str) -> Path: #clean up the path string a bit
     s = s.strip().strip('"').strip("'")
     return Path(os.path.expanduser(os.path.expandvars(s)))
 
 
-def get_file_paths():
+def get_file_paths(): #get source and destination paths from user
     print("Current working directory:", os.getcwd())
     src_input = input("Enter source file path: ")
     dst_input = input("Enter destination path (dir or file): ")
@@ -14,6 +19,7 @@ def get_file_paths():
     src = clean_path(src_input)
     dst = clean_path(dst_input)
 
+    # Validate paths
     if not src.exists():
         print(f"Source does not exist: {src}")
         return False
@@ -22,7 +28,7 @@ def get_file_paths():
         return False
 
     if dst.exists() and dst.is_dir():
-        dst = dst / src.name
+        dst = dst / src.name # if dst is a directory, append source filename
     else:
         parent = dst.parent
         if not parent.exists():
@@ -36,25 +42,54 @@ def get_file_paths():
     return str(src), str(dst)
 
 def main():
+    paths = get_file_paths()
+    if not paths:
+        print("Invalid paths. Exiting.")
+        return 1
 
-    source_path, destination_path = get_file_paths()
+    source_path, destination_path = paths
 
     customers = {}
 
 
-    def check_cells_in_row(row): #simple validation for the 4 columns we expect
+
+    def correct_cells_in_row(row): #correct some common issues in the cells
         if len(row) != 4:
             return False
         customer_id, name, email, purchase_amount = row
         if not customer_id.isdigit():
+            print("Invalid customer ID {} on row {}. Inputing the ID".format(customer_id, row))
+            customer_id = str(index)
+        elif int(customer_id) < 0:
+            print("Negative customer ID {} on row {}. Inputing the ID".format(customer_id, row))
+            customer_id = str(index)
+        #name needs to be without numbers
+        if set(name) & set("0123456789"):
+            print("Invalid name {} on row {}.".format(name, row))
             return False
-        if "@" not in email or "." not in email:
+        #email needs to be split into local and domain parts. Domain part needs a dot
+        email_parts = email.split("@")
+        if len(email_parts) != 2 or not email_parts[0] or not email_parts[1]:
+            print("Invalid email address {} on row {}.".format(email, row))
             return False
+        if "." not in email_parts[1]:
+            print("Invalid email domain {} on row {}.".format(email_parts[1], row))
+            return False
+        #purchase amount needs to be a float, if negative, make positive
         try:
-            float(purchase_amount)
+            amount = float(purchase_amount)
+            if amount < 0:
+                print("Negative purchase amount {} on row {}. Making positive.".format(purchase_amount, row))
+                amount = abs(amount)
+            purchase_amount = str(amount)
         except ValueError:
+            print("Invalid purchase amount {} on row {}.".format(purchase_amount, row))
             return False
-        return True
+        return [customer_id, name, email, purchase_amount]
+
+
+
+
 
     def safe_line_parse(line, target_len=4, skip = False):
         #splits the line up and ensures it has the right number of columns
@@ -66,12 +101,19 @@ def main():
         for row in cols:
             if row.strip() != "":
                 row_buffer.append(row.strip())
-
+        if len(row_buffer) == target_len-1:
+            #if id is missing, it can be imputed.
+            print("Missing customer ID, imputing from line number: ", index)
+            row_buffer.insert(0, str(index))
         if len(row_buffer) == target_len:
-            if skip or check_cells_in_row(row_buffer):
+            if skip:
                 return row_buffer
+            corrected_row_buffer = correct_cells_in_row(row_buffer)
+            if corrected_row_buffer:
+                print("Corrected row: ", corrected_row_buffer)
+                return corrected_row_buffer
         else:
-          # CHANGED: Report the actual row length being validated
+          # error handling for malformed lines
           print(
             f"Malformed line (expected {target_len} columns, got {len(row)}): {line}"
           )
@@ -81,21 +123,21 @@ def main():
         return None
 
 
-    index = 0
+    index = 0 #line index
 
     try:
       with open(source_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
 
       line = lines[index]
-      row = safe_line_parse(line, skip=True)
+      row = safe_line_parse(line, skip=True) #parse the header row without validation
       header = row
       index += 1
-      while index < len(lines):
+      while index < len(lines): #process each line
         line = lines[index]
         parsed_line = safe_line_parse(line)
         if parsed_line is not None:
-          # CHANGED: Reuse parsed_line instead of parsing the same line again
+          # get the values from the parsed line
           customer_id, name, email, purchase_amount = parsed_line
           customers[customer_id] = {
             "name": name,
@@ -104,7 +146,7 @@ def main():
           }
         else:
           print("Skipping malformed line:, ", index)
-        print(index)
+        #print(index)
         index += 1
 
     except FileNotFoundError as e:
