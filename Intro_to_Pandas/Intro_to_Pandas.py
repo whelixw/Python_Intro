@@ -19,8 +19,14 @@ inpath = os.path.join(
 
 df = pd.read_csv(inpath)
 
+print(df.columns)
 print(df.head(10))
 
+#how are quarters encoded?
+print("unique quarters: ", df["quarter"].unique())
+#reencode quarters to year and quarter
+df["year"] = df["quarter"].str[:4].astype(int)
+df["quarter_num"] = df["quarter"].str[5].astype(int)
 
 #some of the city names and are malformed or empty, we make a function to clean them
 
@@ -68,6 +74,7 @@ df = df.drop(columns=["city_from_zip", "zip_code_str", "address_fixed"])
 mean_prices = df.groupby("region")["purchase_price"].mean().reset_index()
 
 #groupby region house type and plot
+#include a line that shows average price for each house type
 mean_prices_by_type = df.groupby(["region", "house_type"])["purchase_price"].mean().reset_index()
 print(mean_prices_by_type)
 
@@ -94,7 +101,7 @@ plt.show()
 
 
 
-#make botsplot without outliers
+#make boxsplot without outliers
 plt.figure(figsize=(12, 8))
 sns.boxplot(data=df, x="region", y="purchase_price", showfliers=False)
 plt.title("Purchase Price Distribution by Region (Without Outliers)")
@@ -153,5 +160,44 @@ plt.xticks(rotation=45)
 plt.tight_layout()
 plt.show()
 
+#histogram of average prices by year
+mean_prices_by_year = df.groupby('year')['purchase_price'].mean().reset_index()
+plt.figure(figsize=(12, 8))
+sns.barplot(data=mean_prices_by_year, x='year', y='purchase_price', palette='mako')
+plt.title('Average Purchase Price by Year')
+plt.xlabel('Year')
+plt.ylabel('Average Purchase Price')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
 
+#boxplot of prices by year
+plt.figure(figsize=(12, 8))
+sns.boxplot(data=df, x='year', y='purchase_price', palette='mako')
+plt.title('Purchase Price Distribution by Year')
+plt.xlabel('Year')
+plt.ylabel('Purchase Price')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
 
+#show boxplot of house type
+plt.figure(figsize=(12, 8))
+sns.boxplot(data=df, x="house_type", y="purchase_price")
+plt.title("Purchase Price Distribution by House Type")
+plt.xlabel("House Type")
+plt.ylabel("Purchase Price")
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+#show distribution of prize in sepate plots by house type
+g = sns.FacetGrid(df, col="house_type", col_wrap=3, height=4)
+g.map(sns.histplot, "purchase_price", bins=30, kde=True)
+g.set_titles("{col_name}")
+g.set_axis_labels("Purchase Price", "Count")
+plt.subplots_adjust(top=0.9)
+g.figure.suptitle("Purchase Price Distribution by House Type")
+plt.show()
+
+#show distribution of villas of 2021
