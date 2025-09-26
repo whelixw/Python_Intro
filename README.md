@@ -5,11 +5,15 @@ All requirements are listed in requirements.txt
 You can install them using pip:
 ```pip install -r requirements.txt```
 
+
+**Intro to Pandas is run in Jupyter Notebook, which needs to be installed.**
+
 ## Running the scripts
 
-The scripts should be run from the root folder (In this case "Python Intro")
+The scripts **except Intro to Pandas** should be run from the root folder, (In this case "Python Intro")
 All data for exercises is in the data folder, scripts are in individual folders.
 The scripts folders also contain an output folder if needed.
+
 ## Exercises
 ### Python Intro Exercise
 The intro exercise was quite simple, the biggest challenge was plotting the data 
@@ -26,3 +30,9 @@ This exercise was a bit more challenging, as I am not very familiar with error h
 I used try/except blocks to handle potential errors when reading the CSV file and converting data types.
 I implemented a buffer to handle missing values and a check for each field to ensure data integrity.
 This could be improved by imputing ID from row index. I also added user input for the input and output file names.
+
+### Intro to Pandas
+This exercise was done in a Jupyter Notebook, which is included in the folder. They can also be found in this gist: https://gist.github.com/whelixw/4afe0d51fbadbd14ecbc9c9e489eb306
+
+The exercise was very open-ended, so I just cleaned up the data and explored it with some basic plots.
+

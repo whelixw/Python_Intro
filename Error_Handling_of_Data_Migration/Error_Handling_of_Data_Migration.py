@@ -1,9 +1,7 @@
 import os
 from pathlib import Path
 
-#TODO: message when overwriting existing file, file perms
-#impute missing id from line number change sign for negative purchase amounts, handle duplicates
-#validate email better.
+
 
 
 def clean_path(s: str) -> Path: #clean up the path string a bit
